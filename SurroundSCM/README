@@ -1,0 +1,9 @@
+My work required me to use Surround SCM, however no proper packages exist for any distributions, and only an InstallAnywhere installer is available.
+Furthermore the installer has no functional silent mode, and directly attempts to write to /usr/bin and /var/lib/..., messing up my root filesystem.
+
+My first attempt involved manually extracting the resource zip from the installer, but that turned out to be too much work. The files in the resource zip often did not have their final name and still needed to be renamed, and parsing the installer XML file by myself didn't seem like a good idea.
+
+Instead this installer will create an overlay filesystem over the actual root, run the installer chrooted into that overlay filesystem, and then packages up the resulting overlay in a package.
+
+Mind you that the installer is not headless, and requires you to manually click some buttons.
+Be sure to leave all directories as the default, and install only the client.
