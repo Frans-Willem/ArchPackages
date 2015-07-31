@@ -16,8 +16,8 @@ build() {
 	_INSTALLER=sscmlinuxjavainstall.bin
 	_ME=`whoami`
 	_MEGROUP=`groups ${_ME} | cut -d' ' -f1`
-	echo Doing nothing
-	sudo rm -rf ${srcdir}/overlay
+	echo Setting up OverlayFS to install to
+	sudo rm -rf "${srcdir}/overlay" "${srcdir}/work" "${srcdir}/combined"
 	mkdir -p ${srcdir}/work
 	mkdir -p ${srcdir}/overlay
 	mkdir -p ${srcdir}/combined
@@ -27,10 +27,14 @@ build() {
 	cp $XAUTHORITY ${srcdir}/overlay/tmp/.Xauthority
 	sudo mount -t overlay -o lowerdir=/,upperdir=${srcdir}/overlay,workdir=${srcdir}/work overlay ${srcdir}/combined
 	sudo mount -o bind /proc ${srcdir}/combined/proc
+	echo Running installer
 	sudo LAX_DEBUG=true XAUTHORITY=/tmp/.Xauthority chroot ${srcdir}/combined /tmp/${_INSTALLER}
+	echo Unmounting OverlayFS
 	sudo umount ${srcdir}/combined/proc
 	sudo umount ${srcdir}/combined
-	sudo chown -R ${_ME}:${_MEGROUP} ${srcdir}/overlay
+	echo Setting all file-ownership to current user.
+	sudo chown -R ${_ME}:${_MEGROUP} ${srcdir}
+	echo Remove all non-essential directories.
 	rm -rf ${srcdir}/overlay/tmp
 	rm -rf ${srcdir}/overlay/dev
 	rm -rf ${srcdir}/overlay/root
@@ -39,7 +43,7 @@ build() {
 package() {
 	echo Copying created files
 	cp -arf "${srcdir}/overlay/"* "${pkgdir}/"
-	echo Linking bin files
+	echo Linking bin files if they have not yet been created
 	if [ ! -e "${pkgdir}/usr/bin/sscm" ]; then
 		if [ -e "${pkgdir}/var/lib/SurroundSCM/Linux/64/sscm" ]; then
 			ln -s /var/lib/SurroundSCM/Linux/64/sscm "${pkgdir}/usr/bin/sscm"
