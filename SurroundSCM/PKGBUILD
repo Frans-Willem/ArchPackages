@@ -1,0 +1,60 @@
+# Maintainer: Frans-Willem Hardijzer <fw at hardijzer dot nl>
+#
+pkgname=surround-scm-client
+pkgver=2013.2.1
+pkgrel=1
+pkgdesc="Surround SCM Version control client"
+arch=('i686' 'x86_64')
+url="http://www.seapine.com/surround-scm/"
+license=('custom')
+source=("sscmlinuxjavainstall_${pkgver}.tar.gz" "scmgui.desktop")
+md5sums=('3b57241e9b0cf5b43415ed29e47c5929'
+         '2748029ceda1af6c14ebfdd70edf272d')
+makedepends=("java-runtime>=5")
+
+build() {
+	_INSTALLER=sscmlinuxjavainstall.bin
+	_ME=`whoami`
+	_MEGROUP=`groups ${_ME} | cut -d' ' -f1`
+	echo Doing nothing
+	sudo rm -rf ${srcdir}/overlay
+	mkdir -p ${srcdir}/work
+	mkdir -p ${srcdir}/overlay
+	mkdir -p ${srcdir}/combined
+	mkdir -p ${srcdir}/overlay/tmp
+	chmod ugo+rwx ${srcdir}/overlay/tmp
+	cp ${srcdir}/${_INSTALLER} ${srcdir}/overlay/tmp/${_INSTALLER}
+	cp $XAUTHORITY ${srcdir}/overlay/tmp/.Xauthority
+	sudo mount -t overlay -o lowerdir=/,upperdir=${srcdir}/overlay,workdir=${srcdir}/work overlay ${srcdir}/combined
+	sudo mount -o bind /proc ${srcdir}/combined/proc
+	sudo LAX_DEBUG=true XAUTHORITY=/tmp/.Xauthority chroot ${srcdir}/combined /tmp/${_INSTALLER}
+	sudo umount ${srcdir}/combined/proc
+	sudo umount ${srcdir}/combined
+	sudo chown -R ${_ME}:${_MEGROUP} ${srcdir}/overlay
+	rm -rf ${srcdir}/overlay/tmp
+	rm -rf ${srcdir}/overlay/dev
+	rm -rf ${srcdir}/overlay/root
+}
+
+package() {
+	echo Copying created files
+	cp -arf "${srcdir}/overlay/"* "${pkgdir}/"
+	echo Linking bin files
+	if [ ! -e "${pkgdir}/usr/bin/sscm" ]; then
+		if [ -e "${pkgdir}/var/lib/SurroundSCM/Linux/64/sscm" ]; then
+			ln -s /var/lib/SurroundSCM/Linux/64/sscm "${pkgdir}/usr/bin/sscm"
+		elif [ -e "${pkgdir}/var/lib/SurroundSCM/Linux/sscm" ]; then
+			ln -s /var/lib/SurroundSCM/Linux/sscm "${pkgdir}/usr/bin/sscm"
+		fi
+	fi
+	if [ ! -e "${pkgdir}/usr/bin/scmgui" ]; then
+		if [ -e "${pkgdir}/var/lib/SurroundSCM/Linux/64/scmgui" ]; then
+			ln -s /var/lib/SurroundSCM/Linux/64/scmgui "${pkgdir}/usr/bin/scmgui"
+		elif [ -e "${pkgdir}/var/lib/SurroundSCM/Linux/scmgui" ]; then
+			ln -s /var/lib/SurroundSCM/Linux/scmgui "${pkgdir}/usr/bin/scmgui"
+		fi
+	fi
+
+	echo Adding FreeDesktop file
+	install -D -m644 "${srcdir}/scmgui.desktop" "${pkgdir}/usr/share/applications/scmgui.desktop"
+}

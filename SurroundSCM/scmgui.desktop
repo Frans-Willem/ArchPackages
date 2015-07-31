@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Name=Surround SCM
+Comment=Seapine ALM Surround SCM Client
+Exec=/usr/bin/scmgui
+Icon=/var/lib/SurroundSCM/scmgui.png
+Terminal=false
+Type=Application
+Categories=Development
+
