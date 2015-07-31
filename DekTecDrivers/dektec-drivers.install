@@ -1,0 +1,29 @@
+KERNEL_NAME=
+KERNEL_VERSION=4.1.2-2-vfio
+DRIVERS="Dta DtaNw DtDrvCommon DtSalDtu Dtu"
+
+pre_install() {
+	echo "Running pre-install script"
+	for drv in ${DRIVERS}; do
+		rmmod ${drv} || true
+	done
+}
+
+post_install() {
+	echo "Running post-install script"
+	depmod -a
+	for drv in ${DRIVERS}; do
+		echo "Loading ${drv}"
+		modprobe ${drv}
+	done
+}
+
+pre_upgrade() {
+	echo "Pre-upgrade"
+	pre_install
+}
+
+post_upgrade() {
+	echo "Post-upgrade"
+	post_install
+}
