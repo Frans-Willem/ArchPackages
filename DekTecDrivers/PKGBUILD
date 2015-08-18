@@ -1,7 +1,7 @@
 # Maintainer: Frans-Willem Hardijzer <fw@hardijzer.nl>
 
 pkgname=dektec-drivers
-pkgver=2015.6
+pkgver=2015.8
 pkgrel=1
 pkgdesc="Dektec drivers I needed for my DekTec cards"
 arch=('i686' 'x86_64')
@@ -9,7 +9,7 @@ url="http://www.dektec.com/Downloads/SDK/"
 license=('Proprietary')
 makedepends=('linux-headers')
 source=("http://www.dektec.com/Products/SDK/LinuxSDK/Downloads/LinuxSDK.tar.gz")
-md5sums=('4ee5706fee8cdbaf3b9a5549f7cb5536')
+md5sums=('0bf3297dcb748b76683051ddd09d270d')
 install=dektec-drivers.install
 
 build() {
