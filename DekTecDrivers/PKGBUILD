@@ -1,7 +1,7 @@
 # Maintainer: Frans-Willem Hardijzer <fw@hardijzer.nl>
 
 pkgname=dektec-drivers
-pkgver=2015.8
+pkgver=2015.9
 pkgrel=1
 pkgdesc="Dektec drivers I needed for my DekTec cards"
 arch=('i686' 'x86_64')
@@ -9,12 +9,14 @@ url="http://www.dektec.com/Downloads/SDK/"
 license=('Proprietary')
 makedepends=('linux-headers')
 source=("http://www.dektec.com/Products/SDK/LinuxSDK/Downloads/LinuxSDK.tar.gz")
-md5sums=('0bf3297dcb748b76683051ddd09d270d')
+md5sums=('795cdff1c936b5d50f6fc73c1de4642f')
 install=dektec-drivers.install
 
 build() {
+    cd "$srcdir/LinuxSDK/Drivers/DtSal/Source"
+    mv DtSal.h DtSal.h.bak
+    awk '/^#else \/\/ WINBUILD$/{print;print "#include <linux/vmalloc.h>";next}1' DtSal.h.bak > DtSal.h
 	cd "$srcdir/LinuxSDK/Drivers/DtaNw/Source/Linux"
-	sed -r "s/SET_ETHTOOL_OPS\(([^,]+),([^\)]+)\)/(\1)->ethtool_ops = (\2)/" -i.bak DtaNwIal.c
 	cd "$srcdir/LinuxSDK/Drivers"
 	for drv in *; do
 		echo Driver: $drv
