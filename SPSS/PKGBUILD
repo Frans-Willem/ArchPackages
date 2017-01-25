@@ -1,0 +1,58 @@
+# Maintainer: Frans-Willem Hardijzer <fw at hardijzer dot nl>
+#
+pkgname=ibm-spss
+pkgver=23.0
+pkgrel=1
+pkgdesc="IBM SPSS Statistics"
+arch=('i686' 'x86_64')
+url="http://www.ibm.com/analytics/us/en/technology/spss/"
+license=('custom')
+source=("SPSS_v${pkgver}_LNX.bin" "spss.desktop" "lservrc")
+md5sums=('625357d4d55507ffda676e4f43d8f474'
+         '6f32a7510394defba2363b6c562b306c'
+         'SKIP')
+makedepends=("java-runtime>=5")
+
+build() {
+	_INSTALLER=SPSS_v${pkgver}_LNX.bin
+	_ME=`whoami`
+	_MEGROUP=`groups ${_ME} | cut -d' ' -f1`
+	echo Setting up OverlayFS to install to
+	sudo rm -rf "${srcdir}/overlay" "${srcdir}/work" "${srcdir}/combined"
+	mkdir -p ${srcdir}/work
+	mkdir -p ${srcdir}/overlay
+	mkdir -p ${srcdir}/combined
+	mkdir -p ${srcdir}/overlay/tmp
+	chmod ugo+rwx ${srcdir}/overlay/tmp
+	cp ${srcdir}/${_INSTALLER} ${srcdir}/overlay/tmp/${_INSTALLER}
+	cp $XAUTHORITY ${srcdir}/overlay/tmp/.Xauthority
+	sudo mount -t overlay -o lowerdir=/,upperdir=${srcdir}/overlay,workdir=${srcdir}/work overlay ${srcdir}/combined
+	sudo mount -o bind /proc ${srcdir}/combined/proc
+	echo Running installer
+	sudo LAX_DEBUG=true XAUTHORITY=/tmp/.Xauthority chroot ${srcdir}/combined /tmp/${_INSTALLER} || true
+	echo Unmounting OverlayFS
+	sudo umount ${srcdir}/combined/proc
+	sudo umount ${srcdir}/combined
+	echo Setting all file-ownership to current user.
+	sudo chown -R ${_ME}:${_MEGROUP} ${srcdir}
+	echo Remove all non-essential directories.
+	rm -rf ${srcdir}/overlay/tmp
+	rm -rf ${srcdir}/overlay/dev
+	rm -rf ${srcdir}/overlay/root
+	rm -rf ${srcdir}/overlay/var
+	echo Copying license
+	cp ${srcdir}/lservrc ${srcdir}/overlay/opt/IBM/SPSS/Statistics/23/bin/
+}
+
+package() {
+	echo Copying created files
+	cp -arf "${srcdir}/overlay/"* "${pkgdir}/"
+	echo Linking bin files if they have not yet been created
+	if [ ! -e "${pkgdir}/usr/bin/spssclient" ]; then
+		mkdir -p "${pkgdir}/usr/bin"
+		ln -s /opt/IBM/SPSS/Statistics/23/bin/spssclient "${pkgdir}/usr/bin/spssclient"
+	fi
+
+	echo Adding FreeDesktop file
+	install -D -m644 "${srcdir}/spss.desktop" "${pkgdir}/usr/share/applications/spss.desktop"
+}
