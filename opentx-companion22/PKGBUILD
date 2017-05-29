@@ -1,0 +1,30 @@
+# Maintainer: Frans-Willem Hardijzer
+pkgname=opentx-companion22
+pkgver=2.2.0RC18
+_pkgver=2.2.0-RC18
+pkgrel=2
+pkgdesc="EEPROM Editor for OpenTX RC transmitter firmwares"
+arch=('x86_64')
+url="http://www.open-tx.org/"
+license=('GPL')
+depends=('qt5-base' 'sdl' 'fox')
+makedepends=('cmake' 'python')
+provides=('companion')
+conflicts=('companion' 'companion9x-svn')
+source=("https://github.com/opentx/opentx/archive/$_pkgver.tar.gz"
+)
+md5sums=('3c142ffa2ac2790de20a515f215b6448')
+
+build() {
+  cd $srcdir
+  mkdir -p build
+  cd build
+  cmake -DFIRMWARE_TARGET=OFF -DALLOW_NIGHTLY_BUILDS=ON -DCMAKE_INSTALL_PREFIX=/usr $srcdir/opentx-$_pkgver
+  # Maybe do 'make companion22' to only compile Companion ?
+  make
+}
+
+package() {
+  cd $srcdir/build
+  make DESTDIR=$pkgdir/ install
+}
